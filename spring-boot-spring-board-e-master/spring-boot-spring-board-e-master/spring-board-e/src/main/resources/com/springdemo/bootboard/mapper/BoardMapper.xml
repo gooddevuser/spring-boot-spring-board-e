@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.springdemo.bootboard.mapper.BoardMapper">
+
+	<insert id="insertBoard" 
+			parameterType="com.springdemo.bootboard.vo.Board"
+			useGeneratedKeys="true"
+			keyColumn="board_idx" keyProperty="boardIdx">
+		<![CDATA[
+		INSERT INTO tbl_board
+		(
+			title
+			, contents
+			, creator_id
+		)
+		VALUES
+		(
+			#{ title }
+			, #{ contents }
+			, #{ creatorId }
+		)
+		]]>
+	</insert>
+	
+	<insert id="insertBoardFileList" parameterType="com.springdemo.bootboard.vo.BoardFile">
+	
+		INSERT INTO tbl_file
+		(board_idx, user_file_name, saved_file_name, file_size, creator_id, created_datetime)
+		VALUES
+			<foreach collection="list" item="item" separator=",">
+			(#{item.boardIdx}, #{item.userFileName}, #{item.savedFileName}, #{item.fileSize}, #{item.creatorId}, now())
+			</foreach>
+	
+	</insert>
+	<select id="selectBoardList" 
+			resultType="com.springdemo.bootboard.vo.Board">
+		<![CDATA[
+		SELECT board_idx, title, created_datetime, creator_id, hit_count
+		FROM tbl_board
+		WHERE deleted_yn = 'N'
+		ORDER BY board_idx DESC
+		]]>
+	</select>
+	
+	<!-- 
+	<select id="selectBoardByBoardIdx" 
+			parameterType="int" 
+			resultType="com.springdemo.bootboard.vo.Board">
+		<![CDATA[
+		SELECT 
+			board_idx, title, contents, created_datetime, creator_id,
+			hit_count, updated_datetime
+		FROM tbl_board
+		WHERE board_idx = #{ boardIdx }
+		]]>
+	</select>
+	-->
+	
+	<resultMap id="boardMap" type="com.springdemo.bootboard.vo.Board">
+		<id column="board_idx" property="boardIdx" />
+		<result column="title" property="title" />
+		<result column="contents" property="contents" />
+		<result column="created_datetime" property="createdDatetime" />
+		<result column="creator_id" property="creatorId" />
+		<result column="hit_count" property="hitCount" />
+		<result column="updated_datetime" property="updatedDatetime" />
+		<collection property="fileList" column="board_idx" 
+					resultMap="fileMap" />
+	</resultMap>	
+	<resultMap id="fileMap" type="com.springdemo.bootboard.vo.BoardFile">
+		<id column="idx" property="idx" />
+		<result column="user_file_name" property="userFileName" />
+		<result column="saved_file_name" property="savedFileName" />
+	</resultMap>	
+	<select id="selectBoardByBoardIdx" 
+			parameterType="int" 
+			resultMap="boardMap">
+		<![CDATA[
+		SELECT 
+			b.board_idx, b.title, b.contents, 
+			b.created_datetime, b.creator_id,
+			b.hit_count, b.updated_datetime,
+			f.idx, f.user_file_name, f.saved_file_name
+		FROM tbl_board b
+		LEFT OUTER JOIN tbl_file f
+		ON b.board_idx = f.board_idx
+		WHERE b.board_idx = #{ boardIdx }
+		]]>
+	</select>
+	
+	<update id="updateBoard"
+			parameterType="com.springdemo.bootboard.vo.Board">
+		<![CDATA[
+		UPDATE tbl_board
+		SET title = #{ title }, 
+			contents = #{ contents },
+			updated_datetime = NOW()
+		WHERE board_idx = #{ boardIdx }
+		]]>
+	</update>
+	
+	<update id="deleteBoard"
+			parameterType="com.springdemo.bootboard.vo.Board">
+		<![CDATA[
+		UPDATE tbl_board
+		SET deleted_yn = 'Y'
+		WHERE board_idx = #{ boardIdx }
+		]]>
+	</update>
+	
+	<select id="selectBoardFileByIdx" 
+			parameterType="int" 
+			resultType="com.springdemo.bootboard.vo.BoardFile">
+		SELECT user_file_name, saved_file_name, file_size
+		FROM tbl_file
+		WHERE idx = #{idx}
+	</select>
+	
+		
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
